@@ -25,4 +25,11 @@ The project transitions from **Exploratory Data Analysis (EDA)** and **Statistic
 * `PhonePe Dashboard.pbix`: Power BI dashboard for interactive visual exploration of transaction trends and failure rates.
 
 ## 🚀 How to Run
-1. **Python Analysis:** Open
+1. **Python Analysis:** Open the `.ipynb` file in Jupyter Lab or Google Colab and ensure `Phonepe.csv` is in the same directory.
+2. **Power BI Dashboard:** Open `PhonePe Dashboard.pbix` using Power BI Desktop to interact with the visual reports.
+
+## 📈 Future Scope
+* **Predictive Modeling:** Implementing Machine Learning classifiers (e.g., Random Forest) to predict the likelihood of a transaction failure based on user behavior and amount.
+* **Trend Forecasting:** Using time-series analysis on the `Date` column to forecast peak transaction periods and optimize server load.
+
+---
