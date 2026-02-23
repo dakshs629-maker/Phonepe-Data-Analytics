@@ -58,7 +58,6 @@ def indian_format(num):
     except: return str(num)
 
 # ---------- 3. SECURE KEY HANDLING ----------
-# .strip() is used here to remove any accidental invisible spaces from the Secrets panel
 api_key = st.secrets.get("GEMINI_API_KEY", "").strip()
 
 # ---------- 4. DATA LOADING ----------
@@ -101,15 +100,15 @@ if df is not None:
     with right:
         st.subheader("🤖 Smart AI Analysis")
         if not api_key:
-            st.warning("Please verify your GEMINI_API_KEY in Streamlit Secrets.")
+            st.warning("⚠️ Please add your GEMINI_API_KEY in Streamlit Secrets to enable AI Analysis.")
         else:
             user_query = st.text_input("Ask a business question:", placeholder="e.g., list all services")
             if user_query:
                 try:
-                    # CONFIGURING AI: Using the stable production method
+                    # CONFIGURING AI: Using gemini-2.0-flash (stable, fast, free-tier compatible)
                     genai.configure(api_key=api_key)
-                    model = genai.GenerativeModel('gemini-1.5-flash')
-                    
+                    model = genai.GenerativeModel('gemini-2.0-flash')
+
                     # PRO MBA CONTEXT: Explicitly inject unique services list to prevent category skipping
                     all_services = df['Service'].unique().tolist() if 'Service' in df.columns else []
                     context = {
@@ -117,7 +116,7 @@ if df is not None:
                         "Volume": total_txns,
                         "Unique_Services_List": all_services
                     }
-                    
+
                     # SYSTEM INSTRUCTION: Forcing business analyst behavior
                     prompt = (
                         f"Act as a Senior FinTech Analyst. Answer using this context: {context}. "
@@ -125,26 +124,25 @@ if df is not None:
                         "Rule: If asked to list services, you MUST list every single category in Unique_Services_List, "
                         "especially low-volume ones like Insurance."
                     )
-                    
+
                     with st.spinner("AI Analyst is thinking..."):
                         response = model.generate_content(prompt)
                         st.markdown(f'<div class="ask-box"><b>AI Analyst:</b><br>{response.text}</div>', unsafe_allow_html=True)
+
                 except Exception as e:
-                    # Graceful error display for recruiters
-                    st.error("The AI is currently synchronizing with the production server.")
-                    st.sidebar.error(f"Technical Log: {str(e)}")
+                    st.error("⚠️ AI Analysis unavailable. Please check your API key in Streamlit Secrets.")
 
         with st.expander("📊 Quick Stats", expanded=True):
             if amount_col:
                 top_row = df.nlargest(1, amount_col).iloc[0]
                 txn_id = top_row.get('Transaction_ID', 'N/A')
                 st.markdown(f"• **Top txn:** {txn_id} | {indian_format(top_row[amount_col])}")
-                
+
                 status_col = next((col for col in df.columns if any(w in col.lower() for w in ['status', 'payment'])), None)
                 if status_col:
                     rate = df[status_col].astype(str).str.contains('success|complete|paid', case=False).mean()
                     st.markdown(f"• **Success rate:** {rate:.1%} ({status_col})")
-                
+
                 st.markdown(f"• **Records analyzed:** {total_txns:,}")
 
 else:
@@ -152,3 +150,4 @@ else:
 
 st.markdown("---")
 st.markdown(f"<p style='text-align: center; color: gray;'>{CONFIG['footer']}</p>", unsafe_allow_html=True)
+
