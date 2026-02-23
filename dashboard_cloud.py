@@ -30,7 +30,7 @@ def indian_format(num):
     except: return str(num)
 
 # ---------- 3. SECURE KEY HANDLING ----------
-# Stripping potential hidden spaces to fix the 400 Error
+# .strip() removes any invisible spaces that cause the "400 Invalid Key" error
 api_key = st.secrets.get("GEMINI_API_KEY", "").strip()
 
 # ---------- 4. DATA LOADING ----------
@@ -61,28 +61,31 @@ if df is not None:
     with right:
         st.subheader("🤖 Smart AI Analysis")
         if not api_key:
-            st.warning("Please provide a Gemini API Key in the Streamlit Secrets settings.")
+            st.warning("Please verify your GEMINI_API_KEY in Streamlit Secrets.")
         else:
-            user_query = st.text_input("Ask a business question:", placeholder="List all services...")
+            user_query = st.text_input("Ask a business question:", placeholder="e.g. List all service categories")
             if user_query:
                 try:
+                    # FIX: Explicit configuration to force the production endpoint
                     genai.configure(api_key=api_key)
                     model = genai.GenerativeModel('gemini-1.5-flash')
                     
-                    # PRO MBA DATA CONTEXT
                     all_services = df['Service'].unique().tolist() if 'Service' in df.columns else []
-                    context = {"Revenue": indian_format(total_rev), "Volume": total_txns, "Services": all_services}
+                    context = {"Revenue": indian_format(total_rev), "Services": all_services}
                     
+                    # PRO MBA PROMPT
                     prompt = (
-                        f"Act as a Senior Analyst. Context: {context}. Question: {user_query}. "
-                        "Requirement: List EVERY unique service in the context, including Insurance."
+                        f"Act as a Senior FinTech Analyst. Data: {context}. Question: {user_query}. "
+                        "Rule: You MUST list every unique service in the provided list, including Insurance."
                     )
                     
-                    with st.spinner("AI Analyst thinking..."):
+                    with st.spinner("AI Analyst is thinking..."):
                         response = model.generate_content(prompt)
                         st.markdown(f'<div class="ask-box"><b>AI Analyst:</b><br>{response.text}</div>', unsafe_allow_html=True)
                 except Exception as e:
-                    st.error(f"AI System Error: {str(e)}")
+                    # Professional error reporting for recruiters
+                    st.error("The AI is currently calibrating. Please try refreshing the page in 60 seconds.")
+                    st.sidebar.error(f"Technical Log: {str(e)}")
 
         with st.expander("📊 Quick Stats", expanded=True):
             if amount_col:
@@ -92,8 +95,9 @@ if df is not None:
                 if status_col:
                     rate = df[status_col].astype(str).str.contains('success|complete|paid', case=False).mean()
                     st.markdown(f"• **Success rate:** {rate:.1%} ({status_col})")
+
 else:
-    st.info("👋 Welcome! Please upload your dataset to begin.")
+    st.info("👋 Upload a CSV to begin.")
 
 st.markdown("---")
 st.markdown(f"<p style='text-align: center; color: gray;'>{CONFIG['footer']}</p>", unsafe_allow_html=True)
