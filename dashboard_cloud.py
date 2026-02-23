@@ -2,7 +2,8 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import os
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 
 # ---------- 1. PAGE CONFIG ----------
 st.set_page_config(
@@ -105,9 +106,8 @@ if df is not None:
             user_query = st.text_input("Ask a business question:", placeholder="e.g., list all services")
             if user_query:
                 try:
-                    # CONFIGURING AI: Using gemini-1.5-flash-8b (highest free-tier quota)
-                    genai.configure(api_key=api_key)
-                    model = genai.GenerativeModel('gemini-1.5-flash-8b')
+                    # CONFIGURING AI: Using new google-genai SDK (stable v1 API)
+                    client = genai.Client(api_key=api_key)
 
                     # PRO MBA CONTEXT: Explicitly inject unique services list to prevent category skipping
                     all_services = df['Service'].unique().tolist() if 'Service' in df.columns else []
@@ -126,7 +126,10 @@ if df is not None:
                     )
 
                     with st.spinner("AI Analyst is thinking..."):
-                        response = model.generate_content(prompt)
+                        response = client.models.generate_content(
+                            model='gemini-1.5-flash',
+                            contents=prompt
+                        )
                         st.markdown(f'<div class="ask-box"><b>AI Analyst:</b><br>{response.text}</div>', unsafe_allow_html=True)
 
                 except Exception as e:
@@ -150,5 +153,3 @@ else:
 
 st.markdown("---")
 st.markdown(f"<p style='text-align: center; color: gray;'>{CONFIG['footer']}</p>", unsafe_allow_html=True)
-
-
