@@ -45,7 +45,6 @@ if df is not None:
     
     total_rev, total_txns = df[amount_col].sum() if amount_col else 0, len(df)
 
-    # --- MAIN UI ---
     st.title(f"💳 {CONFIG['title']}")
     c1, c2, c3 = st.columns(3)
     c1.markdown(f'<div class="metric-card"><h2>{total_txns:,}</h2><p>Total Transactions</p></div>', unsafe_allow_html=True)
@@ -60,31 +59,32 @@ if df is not None:
     with right:
         st.subheader("🤖 Smart AI Analysis")
         if not api_key:
-            st.warning("Please provide a Gemini API Key in the sidebar.")
+            st.warning("Please enter your Gemini API Key in the sidebar.")
         else:
-            user_query = st.text_input("Ask a business question:", placeholder="e.g. List all services")
+            user_query = st.text_input("Ask a business question:", placeholder="e.g. Which service is best?")
             if user_query:
                 try:
                     genai.configure(api_key=api_key)
-                    # FORCING THE STABLE GENERATION VERSION
+                    # FORCING THE STABLE PRODUCTION IDENTIFIER
                     model = genai.GenerativeModel('gemini-1.5-flash')
                     
                     all_services = df['Service'].unique().tolist() if 'Service' in df.columns else []
-                    context = {"Revenue": indian_format(total_rev), "Volume": total_txns, "Services": all_services}
+                    context = {"Total_Revenue": indian_format(total_rev), "Services": all_services}
                     
-                    # PRO MBA PROMPT: Forcing visibility of low-volume categories
+                    # --- PRO MBA PROMPT ---
                     prompt = (
-                        f"Context: {context}. User Question: {user_query}. "
-                        "Instructions: Act as a Senior FinTech Analyst. If asked to list services, "
-                        "you MUST include EVERY category in the 'Services' list provided, "
-                        "especially low-volume ones like Insurance."
+                        f"You are a Senior FinTech Analyst. Data Context: {context}. "
+                        f"Question: {user_query}. "
+                        "Requirement: Provide a concise, data-driven answer. "
+                        "If asked for services, list EVERY category in 'Services', including Insurance."
                     )
                     
-                    with st.spinner("Analyzing..."):
+                    with st.spinner("AI is analyzing..."):
                         response = model.generate_content(prompt)
                         st.markdown(f'<div class="ask-box"><b>AI Analyst:</b><br>{response.text}</div>', unsafe_allow_html=True)
                 except Exception as e:
-                    st.error(f"AI Connection Error. Try refreshing the app or re-deploying.")
+                    # Specific error reporting to help us debug
+                    st.error(f"AI System Error: {str(e)}")
 
         with st.expander("📊 Quick Stats", expanded=True):
             if amount_col:
@@ -94,10 +94,9 @@ if df is not None:
                 if status_col:
                     rate = df[status_col].astype(str).str.contains('success|complete|paid', case=False).mean()
                     st.markdown(f"• **Success rate:** {rate:.1%} ({status_col})")
-                st.markdown(f"• **Records analyzed:** {total_txns:,}")
 
 else:
-    st.info("👋 Welcome! Please upload your dataset to begin.")
+    st.info("👋 Upload a CSV to begin.")
 
 st.markdown("---")
 st.markdown(f"<p style='text-align: center; color: gray;'>{CONFIG['footer']}</p>", unsafe_allow_html=True)
