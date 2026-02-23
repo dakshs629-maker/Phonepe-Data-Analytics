@@ -130,7 +130,7 @@ if df is not None:
                         st.markdown(f'<div class="ask-box"><b>AI Analyst:</b><br>{response.text}</div>', unsafe_allow_html=True)
 
                 except Exception as e:
-                    st.error("⚠️ AI Analysis unavailable. Please check your API key in Streamlit Secrets.")
+                    st.error(f"⚠️ Debug Error: {str(e)}")
 
         with st.expander("📊 Quick Stats", expanded=True):
             if amount_col:
@@ -150,4 +150,5 @@ else:
 
 st.markdown("---")
 st.markdown(f"<p style='text-align: center; color: gray;'>{CONFIG['footer']}</p>", unsafe_allow_html=True)
+
 
