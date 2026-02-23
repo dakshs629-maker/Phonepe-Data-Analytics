@@ -105,9 +105,9 @@ if df is not None:
             user_query = st.text_input("Ask a business question:", placeholder="e.g., list all services")
             if user_query:
                 try:
-                    # CONFIGURING AI: Using gemini-2.0-flash (stable, fast, free-tier compatible)
+                    # CONFIGURING AI: Using gemini-1.5-flash-8b (highest free-tier quota)
                     genai.configure(api_key=api_key)
-                    model = genai.GenerativeModel('gemini-2.0-flash')
+                    model = genai.GenerativeModel('gemini-1.5-flash-8b')
 
                     # PRO MBA CONTEXT: Explicitly inject unique services list to prevent category skipping
                     all_services = df['Service'].unique().tolist() if 'Service' in df.columns else []
