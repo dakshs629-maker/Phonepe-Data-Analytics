@@ -1,28 +1,34 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import os
 
-# ---------- CONFIG ----------
+# ---------- 1. PAGE CONFIG (MUST BE FIRST) ----------
+# This prevents the "oven" from getting stuck or crashing during startup
+st.set_page_config(
+    page_title="PhonePe Transaction Intelligence",
+    page_icon="💳",
+    layout="wide"
+)
+
+# ---------- 2. CONFIG & STYLING ----------
 CONFIG = {
     "title": "PhonePe Transaction Intelligence",
     "amount_keyword": "amount",
-    "footer": "MBA Data Portfolio",
+    "footer": "MBA Data Portfolio | B.A. (Hons) Economics Graduate",
 }
 
-# ---------- PAGE CONFIG ----------
-st.set_page_config(page_title=CONFIG["title"].replace(" ", ""), layout="wide")
-
-# ---------- CSS ----------
 st.markdown(
     """
 <style>
 .metric-card {
-    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     padding: 1.5rem;
     border-radius: 15px;
     color: white;
     text-align: center;
     margin: 0.5rem 0;
+    box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
 }
 .summary-box {
     background: rgba(46, 125, 50, 0.1);
@@ -32,10 +38,10 @@ st.markdown(
     margin: 1rem 0;
 }
 .insights-box {
-    background: rgba(156, 39, 176, 0.1);
+    background: rgba(30, 136, 229, 0.1);
     padding: 1.5rem;
     border-radius: 12px;
-    border-left: 4px solid #9c27b0;
+    border-left: 4px solid #1e88e5;
     margin: 1rem 0;
 }
 </style>
@@ -43,9 +49,9 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# ---------- HELPERS ----------
+# ---------- 3. HELPERS ----------
 def indian_format(num):
-    """Indian lakhs/crores: 347432194 → ₹34,74,32,194"""
+    """Formats numbers to Indian Rupee standard (Lakhs/Crores)"""
     try:
         num = float(num)
     except (TypeError, ValueError):
@@ -53,8 +59,8 @@ def indian_format(num):
 
     neg = num < 0
     num = abs(int(round(num)))
-
     s = str(num)
+    
     if len(s) <= 3:
         result = s
     else:
@@ -71,18 +77,31 @@ def indian_format(num):
 
     return f"{'-' if neg else ''}₹{result}"
 
-# ---------- HEADER ----------
-st.title(f"💳 {CONFIG['title']}")
-st.markdown("**Interactive analytics dashboard for payment data**")
-
-# ---------- SIDEBAR ----------
+# ---------- 4. DATA LOADING LOGIC ----------
 st.sidebar.header("📊 Data Controls")
-uploaded_file = st.sidebar.file_uploader("Upload CSV", type="csv")
+uploaded_file = st.sidebar.file_uploader("Upload new PhonePe CSV", type="csv")
 
+# This section ensures the dashboard isn't empty on first load
+df = None
 if uploaded_file:
     df = pd.read_csv(uploaded_file)
+    st.sidebar.success("✅ Custom File Loaded")
+else:
+    # Attempt to load the dataset already in your GitHub repo
+    default_file = "Phonepe Dataset.csv"
+    if os.path.exists(default_file):
+        df = pd.read_csv(default_file)
+        st.sidebar.info("📂 Using Repository Dataset")
+    else:
+        st.sidebar.warning("⚠️ No dataset found. Please upload a CSV.")
 
-    # Detect amount column
+# ---------- 5. DASHBOARD MAIN UI ----------
+st.title(f"💳 {CONFIG['title']}")
+st.markdown("**FinTech Analytics Dashboard | Transaction Pattern Analysis**")
+
+if df is not None:
+    # --- DATA CLEANING ---
+    # Detect and clean the amount column
     amount_col = None
     for col in df.columns:
         if CONFIG["amount_keyword"] in col.lower():
@@ -96,141 +115,59 @@ if uploaded_file:
             .str.replace("₹|Rs|,|\\s", "", regex=True)
         )
         df[amount_col] = pd.to_numeric(df[amount_col], errors="coerce")
-        st.sidebar.success(f"✅ Using: **{amount_col}**")
-    else:
-        st.sidebar.error("No amount column detected.")
-
-    # Metrics
+    
+    # Calculate Core Metrics
     total_rev = df[amount_col].sum() if amount_col else 0
     avg_amt = df[amount_col].mean() if amount_col else 0
     max_amt = df[amount_col].max() if amount_col else 0
+    total_txns = len(df)
 
-    # Sidebar summary (compact)
-    st.sidebar.markdown(
-        f"""
-    <div class="summary-box">
-        <b>{len(df):,}</b> txns | <b>{indian_format(total_rev)}</b> revenue
-    </div>
-    """,
-        unsafe_allow_html=True,
-    )
-
-    # ---------- KPI CARDS ----------
+    # --- KPI CARDS ---
     c1, c2, c3, c4 = st.columns(4)
     with c1:
-        st.markdown(
-            f"""
-        <div class="metric-card">
-            <h2 style='font-size: 2rem'>{len(df):,}</h2>
-            <p>Total Transactions</p>
-        </div>
-        """,
-            unsafe_allow_html=True,
-        )
+        st.markdown(f'<div class="metric-card"><h2>{total_txns:,}</h2><p>Transactions</p></div>', unsafe_allow_html=True)
     with c2:
-        st.markdown(
-            f"""
-        <div class="metric-card">
-            <h2 style='font-size: 2rem'>{indian_format(total_rev)}</h2>
-            <p>Total Revenue</p>
-        </div>
-        """,
-            unsafe_allow_html=True,
-        )
+        st.markdown(f'<div class="metric-card"><h2>{indian_format(total_rev)}</h2><p>Total Revenue</p></div>', unsafe_allow_html=True)
     with c3:
-        st.markdown(
-            f"""
-        <div class="metric-card">
-            <h2 style='font-size: 2rem'>{indian_format(avg_amt)}</h2>
-            <p>Avg Transaction</p>
-        </div>
-        """,
-            unsafe_allow_html=True,
-        )
+        st.markdown(f'<div class="metric-card"><h2>{indian_format(avg_amt)}</h2><p>Avg Ticket Size</p></div>', unsafe_allow_html=True)
     with c4:
-        st.markdown(
-            f"""
-        <div class="metric-card">
-            <h2 style='font-size: 2rem'>{indian_format(max_amt)}</h2>
-            <p>Highest Amount</p>
-        </div>
-        """,
-            unsafe_allow_html=True,
-        )
+        st.markdown(f'<div class="metric-card"><h2>{indian_format(max_amt)}</h2><p>Peak Transaction</p></div>', unsafe_allow_html=True)
 
-    # ---------- MAIN LAYOUT ----------
+    # --- VISUALIZATION SECTION ---
+    st.markdown("---")
     left, right = st.columns([2, 1])
 
-    # Recent transactions: ALL columns
     with left:
-        st.subheader("📋 Recent Transactions")
+        st.subheader("📋 Raw Transaction Log (Latest)")
         st.dataframe(df.head(15), use_container_width=True, hide_index=True)
 
-    # Insights + Quick Stats
     with right:
-        st.subheader("📊 Key Insights")
-
-        if amount_col and len(df) > 0:
+        st.subheader("📊 Strategic Summary")
+        if amount_col and total_txns > 0:
             top_txn = df.nlargest(1, amount_col).iloc[0]
             st.markdown(
                 f"""
-            <div class="insights-box">
-                <b>Revenue Summary</b><br>
-                • Total: {indian_format(total_rev)}<br>
-                • Top txn: {top_txn.get('Transaction_ID', 'N/A')} | {indian_format(top_txn[amount_col])}<br>
-                • Avg txn: {indian_format(avg_amt)}
-            </div>
-            """,
+                <div class="insights-box">
+                    <b>Transaction Deep-Dive</b><br>
+                    • <b>Scale:</b> {indian_format(total_rev)} analyzed<br>
+                    • <b>High Value:</b> {indian_format(top_txn[amount_col])} (ID: {top_txn.get('Transaction_ID', 'N/A')})<br>
+                    • <b>Stability:</b> {indian_format(avg_amt)} average txn value
+                </div>
+                """,
                 unsafe_allow_html=True,
             )
-
-        with st.expander("📊 Quick Stats", expanded=False):
-            if amount_col and len(df) > 0:
-                st.markdown("**Key Insights:**")
-                st.markdown(
-                    f"• **Top txn:** {top_txn.get('Transaction_ID', 'N/A')} | {indian_format(top_txn[amount_col])}"
-                )
-
-                # status / success rate
-                status_col = None
-                for col in df.columns:
-                    if any(word in col.lower() for word in ["status", "payment_status"]):
-                        status_col = col
-                        break
-
-                if status_col:
-                    status_values = df[status_col].astype(str).str.lower()
-                    success_rate = status_values.str.contains(
-                        "success|complete|paid|approved",
-                        case=False,
-                        na=False,
-                    ).mean()
-                    st.markdown(
-                        f"• **Success rate:** {success_rate:.1%} ({status_col})"
-                    )
-
-                st.markdown(f"• **Records analyzed:** {len(df):,}")
-
-                # Top service/category/product
-                for col in ["Service", "Category", "Product"]:
-                    if col in df.columns:
-                        top_item = df[col].value_counts().index[0]
-                        st.markdown(f"• **Top {col.lower()}:** {top_item}")
-                        break
+        
+        with st.expander("🔍 Categorical Distribution"):
+            for col in ["Service", "Category", "Product", "Payment_Mode"]:
+                if col in df.columns:
+                    st.write(f"**Top {col}:** {df[col].value_counts().index[0]}")
 
 else:
-    st.info("👆 **Upload your CSV** to get started!")
-    st.markdown("### **Features**")
-    st.markdown(
-        """
-- **Advanced business analytics**
-- **Automated column validation**
-- **Robust error recovery**
-"""
-    )
+    st.info("👋 Welcome! Please upload your dataset in the sidebar to begin analysis.")
 
 st.markdown("---")
-st.markdown(f"*{CONFIG['footer']}*")
+st.markdown(f"<p style='text-align: center; color: gray;'>{CONFIG['footer']}</p>", unsafe_allow_html=True)
+
 
 
 
