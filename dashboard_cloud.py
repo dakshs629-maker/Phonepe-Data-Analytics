@@ -130,12 +130,27 @@ if df is not None:
             if amount_col:
                 top_row = df.nlargest(1, amount_col).iloc[0]
                 txn_id = top_row.get('Transaction_ID', 'N/A')
+                st.markdown("**Key Insights:**")
                 st.markdown(f"• **Top txn:** {txn_id} | {indian_format(top_row[amount_col])}")
-                status_col = next((col for col in df.columns if any(w in col.lower() for w in ['status', 'payment'])), None)
+
+                # Smart success rate detection
+                status_col = None
+                for col in df.columns:
+                    if any(word in col.lower() for word in ['status', 'payment_status']):
+                        status_col = col
+                        break
                 if status_col:
-                    rate = df[status_col].astype(str).str.contains('success|complete|paid', case=False).mean()
+                    rate = df[status_col].astype(str).str.contains('success|complete|paid|approved', case=False, na=False).mean()
                     st.markdown(f"• **Success rate:** {rate:.1%} ({status_col})")
+
                 st.markdown(f"• **Records analyzed:** {total_txns:,}")
+
+                # Top service/category/product
+                for col in ['Service', 'Category', 'Product']:
+                    if col in df.columns:
+                        top_item = df[col].value_counts().index[0]
+                        st.markdown(f"• **Top {col.lower()}:** {top_item}")
+                        break
 else:
     st.info("👋 Welcome! Please upload your dataset to begin.")
 
