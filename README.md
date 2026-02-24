@@ -4,6 +4,10 @@
 
 ---
 
+🌐 Live Demo: https://phonepe-data-analytics-dedtwcb7rffgzbveeraa8m.streamlit.app/
+
+---
+
 ## 📌 Project Overview
 
 This project analyses a synthetic dataset of 300,000 PhonePe transactions spanning three major service categories: **Loans**, **Insurance**, and **Recharge & Bills**. The goal is to uncover transaction patterns, quantify payment failure drivers, and surface business-ready insights through both Python analytics and an interactive Streamlit dashboard.
