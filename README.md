@@ -96,7 +96,7 @@ Then deploy `dashboard_cloud.py` as the entry point. The app will auto-load `Pho
 
 - **KPI Cards** — Total transactions, total revenue, average ticket size (Indian lakh/crore formatting: ₹X,XX,XX,XXX)
 - **Transaction Table** — Paginated preview of the most recent records
-- **Smart AI Q&A** — Ask natural language business questions; answered by Llama 3.2 (local) or Gemini 2.5 Flash (cloud)
+- **Smart AI Q&A** — Ask natural language business questions; answered by Gemini 2.5 Flash
 - **Quick Stats Panel** — Auto-detects success/failure columns, top service category, and highest-value transaction
 - **Auto Column Detection** — Intelligently identifies the amount column using keyword matching
 
