@@ -2,8 +2,8 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import os
-from google import genai
-from google.genai import types
+import google.generativeai as genai
+import google.ai.generativelanguage as glm
 
 # ---------- 1. PAGE CONFIG ----------
 st.set_page_config(
@@ -62,16 +62,24 @@ def indian_format(num):
 api_key = st.secrets.get("GEMINI_API_KEY", "").strip()
 
 # ---------- 4. DATA LOADING ----------
+@st.cache_data
+def load_default():
+    return pd.read_csv("Phonepe Dataset.csv")
+
+@st.cache_data
+def load_uploaded(file):
+    return pd.read_csv(file)
+
 st.sidebar.header("📊 Data Controls")
 uploaded_file = st.sidebar.file_uploader("Upload PhonePe CSV", type="csv")
 df = None
 default_file = "Phonepe Dataset.csv"
 
 if uploaded_file:
-    df = pd.read_csv(uploaded_file)
+    df = load_uploaded(uploaded_file)
     st.sidebar.success("✅ Custom File Loaded")
 elif os.path.exists(default_file):
-    df = pd.read_csv(default_file)
+    df = load_default()
     st.sidebar.info("📂 Using Repository Dataset")
 
 # ---------- 5. MAIN UI ----------
@@ -106,8 +114,13 @@ if df is not None:
             user_query = st.text_input("Ask a business question:", placeholder="e.g., list all services")
             if user_query:
                 try:
-                    # CONFIGURING AI: Using new google-genai SDK (stable v1 API)
-                    client = genai.Client(api_key=api_key)
+                    # Force stable v1 API endpoint
+                    import google.generativeai as genai
+                    genai.configure(
+                        api_key=api_key,
+                        client_options={"api_endpoint": "generativelanguage.googleapis.com"}
+                    )
+                    model = genai.GenerativeModel('models/gemini-1.5-flash')
 
                     # PRO MBA CONTEXT: Explicitly inject unique services list to prevent category skipping
                     all_services = df['Service'].unique().tolist() if 'Service' in df.columns else []
@@ -126,10 +139,7 @@ if df is not None:
                     )
 
                     with st.spinner("AI Analyst is thinking..."):
-                        response = client.models.generate_content(
-                            model='gemini-1.5-flash',
-                            contents=prompt
-                        )
+                        response = model.generate_content(prompt)
                         st.markdown(f'<div class="ask-box"><b>AI Analyst:</b><br>{response.text}</div>', unsafe_allow_html=True)
 
                 except Exception as e:
