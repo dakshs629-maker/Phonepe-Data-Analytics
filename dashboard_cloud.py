@@ -52,7 +52,7 @@ def indian_format(num):
             if rest: parts.append(rest)
             parts.reverse()
             result = ",".join(parts) + "," + last3
-        return f"{'-' if neg else ''}Rs.{result}"
+        return f"{'-' if neg else ''}₹{result}"
     except: return str(num)
 
 def call_gemini(api_key, prompt):
@@ -76,17 +76,17 @@ def load_default():
 def load_uploaded(file):
     return pd.read_csv(file)
 
-st.sidebar.header("Data Controls")
-uploaded_file = st.sidebar.file_uploader("Upload PhonePe CSV", type="csv")
+st.sidebar.header("📊 Data Controls")
+uploaded_file = st.sidebar.file_uploader("Upload CSV (optional)", type="csv")
 df = None
 
 if uploaded_file:
     df = load_uploaded(uploaded_file)
-    st.sidebar.success("Custom File Loaded")
+    st.sidebar.success("✅ Custom File Loaded")
 else:
     try:
         df = load_default()
-        st.sidebar.info("Using Repository Dataset")
+        st.sidebar.info("📂 Dataset Loaded")
     except Exception as e:
         st.sidebar.error(f"Could not load dataset: {e}")
 
@@ -95,7 +95,7 @@ st.title(f"💳 {CONFIG['title']}")
 if df is not None:
     amount_col = next((col for col in df.columns if CONFIG["amount_keyword"] in col.lower()), None)
     if amount_col:
-        df[amount_col] = pd.to_numeric(df[amount_col].astype(str).str.replace("Rs|,|\\s", "", regex=True), errors="coerce")
+        df[amount_col] = pd.to_numeric(df[amount_col].astype(str).str.replace("₹|Rs|,|\\s", "", regex=True), errors="coerce")
 
     total_rev = df[amount_col].sum() if amount_col else 0
     total_txns = len(df)
@@ -108,7 +108,7 @@ if df is not None:
     left, right = st.columns([1.5, 1])
 
     with left:
-        st.subheader("Transaction Data")
+        st.subheader("📋 Transaction Data")
         st.dataframe(df.head(15), use_container_width=True, hide_index=True)
 
     with right:
@@ -132,7 +132,7 @@ if df is not None:
                 except Exception as e:
                     st.error(f"Error: {str(e)}")
 
-        with st.expander("Quick Stats", expanded=True):
+        with st.expander("📊 Quick Stats", expanded=True):
             if amount_col:
                 top_row = df.nlargest(1, amount_col).iloc[0]
                 txn_id = top_row.get('Transaction_ID', 'N/A')
@@ -156,8 +156,7 @@ if df is not None:
                         st.markdown(f"- **Top {col.lower()}:** {top_item}")
                         break
 else:
-    st.info("Welcome! Please upload your dataset to begin.")
+    st.info("👋 Welcome! Please upload your dataset to begin.")
 
 st.markdown("---")
 st.markdown(f"<p style='text-align: center; color: gray;'>{CONFIG['footer']}</p>", unsafe_allow_html=True)
-
