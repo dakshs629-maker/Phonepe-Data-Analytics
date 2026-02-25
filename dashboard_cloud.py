@@ -55,8 +55,8 @@ def indian_format(num):
         return f"{'-' if neg else ''}₹{result}"
     except: return str(num)
 
+# Fixed: Using gemini-2.0-flash to resolve 400 errors
 def call_gemini(api_key, prompt):
-    # Stable model to prevent 400 errors
     model_id = "gemini-2.0-flash" 
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_id}:generateContent?key={api_key}"
     
@@ -64,12 +64,18 @@ def call_gemini(api_key, prompt):
     
     try:
         r = requests.post(url, json=payload, timeout=30)
+        
+        # Handle 429 Rate Limit error
         if r.status_code == 429:
             return "⚠️ AI Limit Reached: Please wait 60 seconds and try again."
+        
+        # Handle 400 Bad Request error
         if r.status_code == 400:
             return f"⚠️ API Error 400: Bad Request. Ensure model ID is correct."
+
         r.raise_for_status()
         return r.json()["candidates"][0]["content"]["parts"][0]["text"]
+    
     except Exception as e:
         return f"⚠️ Connection Error: {str(e)}"
 
@@ -81,14 +87,14 @@ def load_data(file_path):
 
 st.sidebar.header("📊 Data Controls")
 
-# Manual upload disabled as requested
-st.sidebar.file_uploader("Upload PhonePe CSV", type="csv", disabled=True, help="Manual upload is disabled. System is locked to repository data.")
+# Label updated to "Upload Dataset" and disabled
+st.sidebar.file_uploader("Upload Dataset", type="csv", disabled=True, help="Manual upload is disabled. System is locked to repository data.")
 
 df = None
-# Forcing the app to use Phonepe.csv as the default
+# Forcing the use of Phonepe.csv with the requested label
 if os.path.exists("Phonepe.csv"):
     df = load_data("Phonepe.csv")
-    st.sidebar.info("📂 Using Protected File: Phonepe.csv")
+    st.sidebar.info("📂 Using Repository File: PhonePe.csv")
 else:
     st.sidebar.error("❌ Error: 'Phonepe.csv' not found in repository.")
 
@@ -159,6 +165,7 @@ else:
 
 st.markdown("---")
 st.markdown(f"<p style='text-align: center; color: gray;'>{CONFIG['footer']}</p>", unsafe_allow_html=True)
+
 
 
 
