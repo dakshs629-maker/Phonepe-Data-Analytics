@@ -134,5 +134,5 @@ pip install -r requirements.txt
 
 ## 👤 Author
 
-**MBA Data Portfolio**
+**Data Portfolio**
 Built as a demonstration of end-to-end data analytics — from hypothesis-driven Python analysis to production-ready dashboard deployment.
