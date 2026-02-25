@@ -55,34 +55,42 @@ def indian_format(num):
         return f"{'-' if neg else ''}₹{result}"
     except: return str(num)
 
-# Direct REST API — bypasses SDK v1beta issue entirely
 def call_gemini(api_key, prompt):
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}"
+    # Stable model to prevent 400 errors
+    model_id = "gemini-2.0-flash" 
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_id}:generateContent?key={api_key}"
+    
     payload = {"contents": [{"parts": [{"text": prompt}]}]}
-    r = requests.post(url, json=payload, timeout=30)
-    r.raise_for_status()
-    return r.json()["candidates"][0]["content"]["parts"][0]["text"]
+    
+    try:
+        r = requests.post(url, json=payload, timeout=30)
+        if r.status_code == 429:
+            return "⚠️ AI Limit Reached: Please wait 60 seconds and try again."
+        if r.status_code == 400:
+            return f"⚠️ API Error 400: Bad Request. Ensure model ID is correct."
+        r.raise_for_status()
+        return r.json()["candidates"][0]["content"]["parts"][0]["text"]
+    except Exception as e:
+        return f"⚠️ Connection Error: {str(e)}"
 
 api_key = st.secrets.get("GEMINI_API_KEY", "").strip()
 
 @st.cache_data
-def load_default():
-    return pd.read_csv("Phonepe Dataset.csv")
-
-@st.cache_data
-def load_uploaded(file):
-    return pd.read_csv(file)
+def load_data(file_path):
+    return pd.read_csv(file_path)
 
 st.sidebar.header("📊 Data Controls")
-uploaded_file = st.sidebar.file_uploader("Upload PhonePe CSV", type="csv")
-df = None
 
-if uploaded_file:
-    df = load_uploaded(uploaded_file)
-    st.sidebar.success("✅ Custom File Loaded")
-elif os.path.exists("Phonepe Dataset.csv"):
-    df = load_default()
-    st.sidebar.info("📂 Using Repository Dataset")
+# Manual upload disabled as requested
+st.sidebar.file_uploader("Upload PhonePe CSV", type="csv", disabled=True, help="Manual upload is disabled. System is locked to repository data.")
+
+df = None
+# Forcing the app to use Phonepe.csv as the default
+if os.path.exists("Phonepe.csv"):
+    df = load_data("Phonepe.csv")
+    st.sidebar.info("📂 Using Protected File: Phonepe.csv")
+else:
+    st.sidebar.error("❌ Error: 'Phonepe.csv' not found in repository.")
 
 st.title(f"💳 {CONFIG['title']}")
 
@@ -94,6 +102,7 @@ if df is not None:
     total_rev = df[amount_col].sum() if amount_col else 0
     total_txns = len(df)
 
+    # Dashboard Metrics
     c1, c2, c3 = st.columns(3)
     c1.markdown(f'<div class="metric-card"><h2>{total_txns:,}</h2><p>Total Transactions</p></div>', unsafe_allow_html=True)
     c2.markdown(f'<div class="metric-card"><h2>{indian_format(total_rev)}</h2><p>Total Revenue</p></div>', unsafe_allow_html=True)
@@ -133,29 +142,24 @@ if df is not None:
                 st.markdown("**Key Insights:**")
                 st.markdown(f"• **Top txn:** {txn_id} | {indian_format(top_row[amount_col])}")
 
-                # Smart success rate detection
-                status_col = None
-                for col in df.columns:
-                    if any(word in col.lower() for word in ['status', 'payment_status']):
-                        status_col = col
-                        break
+                status_col = next((col for col in df.columns if any(word in col.lower() for word in ['status', 'payment_status'])), None)
                 if status_col:
                     rate = df[status_col].astype(str).str.contains('success|complete|paid|approved', case=False, na=False).mean()
                     st.markdown(f"• **Success rate:** {rate:.1%} ({status_col})")
 
                 st.markdown(f"• **Records analyzed:** {total_txns:,}")
 
-                # Top service/category/product
                 for col in ['Service', 'Category', 'Product']:
                     if col in df.columns:
                         top_item = df[col].value_counts().index[0]
                         st.markdown(f"• **Top {col.lower()}:** {top_item}")
                         break
 else:
-    st.info("👋 Welcome! Please upload your dataset to begin.")
+    st.info("👋 System is ready. Ensure 'Phonepe.csv' is uploaded to your GitHub repository.")
 
 st.markdown("---")
 st.markdown(f"<p style='text-align: center; color: gray;'>{CONFIG['footer']}</p>", unsafe_allow_html=True)
+
 
 
 
