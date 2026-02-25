@@ -14,7 +14,7 @@ st.set_page_config(
 CONFIG = {
     "title": "PhonePe Transaction Intelligence",
     "amount_keyword": "amount",
-    "footer": "Daksh Sharma · Data Analytics Portfolio",
+    "footer": "MBA Data Portfolio",
 }
 
 st.markdown("""
@@ -55,6 +55,7 @@ def indian_format(num):
         return f"{'-' if neg else ''}₹{result}"
     except: return str(num)
 
+# Direct REST API — bypasses SDK v1beta issue entirely
 def call_gemini(api_key, prompt):
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}"
     payload = {"contents": [{"parts": [{"text": prompt}]}]}
@@ -64,31 +65,24 @@ def call_gemini(api_key, prompt):
 
 api_key = st.secrets.get("GEMINI_API_KEY", "").strip()
 
-# Google Drive CSV — avoids GitHub 25MB file size limit
-GDRIVE_FILE_ID = "18AzvRQJQ4qERl8s8F573DDZRZxYUfBO-"
-GDRIVE_URL = f"https://drive.google.com/uc?export=download&id={GDRIVE_FILE_ID}"
-
 @st.cache_data
 def load_default():
-    return pd.read_csv(GDRIVE_URL)
+    return pd.read_csv("Phonepe Dataset.csv")
 
 @st.cache_data
 def load_uploaded(file):
     return pd.read_csv(file)
 
 st.sidebar.header("📊 Data Controls")
-uploaded_file = st.sidebar.file_uploader("Upload CSV (optional)", type="csv")
+uploaded_file = st.sidebar.file_uploader("Upload PhonePe CSV", type="csv")
 df = None
 
 if uploaded_file:
     df = load_uploaded(uploaded_file)
     st.sidebar.success("✅ Custom File Loaded")
-else:
-    try:
-        df = load_default()
-        st.sidebar.info("📂 Dataset Loaded")
-    except Exception as e:
-        st.sidebar.error(f"Could not load dataset: {e}")
+elif os.path.exists("Phonepe Dataset.csv"):
+    df = load_default()
+    st.sidebar.info("📂 Using Repository Dataset")
 
 st.title(f"💳 {CONFIG['title']}")
 
@@ -114,7 +108,7 @@ if df is not None:
     with right:
         st.subheader("🤖 Smart AI Analysis")
         if not api_key:
-            st.warning("Please add your GEMINI_API_KEY in Streamlit Secrets.")
+            st.warning("⚠️ Please add your GEMINI_API_KEY in Streamlit Secrets.")
         else:
             user_query = st.text_input("Ask a business question:", placeholder="e.g., list all services")
             if user_query:
@@ -130,15 +124,16 @@ if df is not None:
                         result = call_gemini(api_key, prompt)
                         st.markdown(f'<div class="ask-box"><b>AI Analyst:</b><br>{result}</div>', unsafe_allow_html=True)
                 except Exception as e:
-                    st.error(f"Error: {str(e)}")
+                    st.error(f"⚠️ Debug Error: {str(e)}")
 
         with st.expander("📊 Quick Stats", expanded=True):
             if amount_col:
                 top_row = df.nlargest(1, amount_col).iloc[0]
                 txn_id = top_row.get('Transaction_ID', 'N/A')
                 st.markdown("**Key Insights:**")
-                st.markdown(f"- **Top txn:** {txn_id} | {indian_format(top_row[amount_col])}")
+                st.markdown(f"• **Top txn:** {txn_id} | {indian_format(top_row[amount_col])}")
 
+                # Smart success rate detection
                 status_col = None
                 for col in df.columns:
                     if any(word in col.lower() for word in ['status', 'payment_status']):
@@ -146,17 +141,21 @@ if df is not None:
                         break
                 if status_col:
                     rate = df[status_col].astype(str).str.contains('success|complete|paid|approved', case=False, na=False).mean()
-                    st.markdown(f"- **Success rate:** {rate:.1%} ({status_col})")
+                    st.markdown(f"• **Success rate:** {rate:.1%} ({status_col})")
 
-                st.markdown(f"- **Records analyzed:** {total_txns:,}")
+                st.markdown(f"• **Records analyzed:** {total_txns:,}")
 
+                # Top service/category/product
                 for col in ['Service', 'Category', 'Product']:
                     if col in df.columns:
                         top_item = df[col].value_counts().index[0]
-                        st.markdown(f"- **Top {col.lower()}:** {top_item}")
+                        st.markdown(f"• **Top {col.lower()}:** {top_item}")
                         break
 else:
     st.info("👋 Welcome! Please upload your dataset to begin.")
 
 st.markdown("---")
 st.markdown(f"<p style='text-align: center; color: gray;'>{CONFIG['footer']}</p>", unsafe_allow_html=True)
+
+
+
