@@ -11,10 +11,11 @@ st.set_page_config(
     layout="wide"
 )
 
+# UPDATED: Footer changed to reflect your Data Analytics focus
 CONFIG = {
     "title": "PhonePe Transaction Intelligence",
     "amount_keyword": "amount",
-    "footer": "MBA Data Portfolio",
+    "footer": "Data Analytics Portfolio",
 }
 
 st.markdown("""
@@ -55,9 +56,8 @@ def indian_format(num):
         return f"{'-' if neg else ''}₹{result}"
     except: return str(num)
 
-# Direct REST API — bypasses SDK v1beta issue entirely
 def call_gemini(api_key, prompt):
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}"
     payload = {"contents": [{"parts": [{"text": prompt}]}]}
     r = requests.post(url, json=payload, timeout=30)
     r.raise_for_status()
@@ -66,27 +66,29 @@ def call_gemini(api_key, prompt):
 api_key = st.secrets.get("GEMINI_API_KEY", "").strip()
 
 @st.cache_data
-def load_default():
-    return pd.read_csv("Phonepe Dataset.csv")
-
-@st.cache_data
-def load_uploaded(file):
-    return pd.read_csv(file)
+def load_data(file_path):
+    return pd.read_csv(file_path)
 
 st.sidebar.header("📊 Data Controls")
 uploaded_file = st.sidebar.file_uploader("Upload PhonePe CSV", type="csv")
+
+# UPDATED: Logic to prioritize Phonepe.csv in the repository
 df = None
+repo_file = "Phonepe.csv"
 
 if uploaded_file:
-    df = load_uploaded(uploaded_file)
+    df = load_data(uploaded_file)
     st.sidebar.success("✅ Custom File Loaded")
-elif os.path.exists("Phonepe Dataset.csv"):
-    df = load_default()
-    st.sidebar.info("📂 Using Repository Dataset")
+elif os.path.exists(repo_file):
+    df = load_data(repo_file)
+    st.sidebar.info(f"📂 Automatically loaded: {repo_file}")
+else:
+    st.sidebar.warning(f"⚠️ {repo_file} not found in repository.")
 
 st.title(f"💳 {CONFIG['title']}")
 
 if df is not None:
+    # --- Data Processing ---
     amount_col = next((col for col in df.columns if CONFIG["amount_keyword"] in col.lower()), None)
     if amount_col:
         df[amount_col] = pd.to_numeric(df[amount_col].astype(str).str.replace("₹|Rs|,|\\s", "", regex=True), errors="coerce")
@@ -94,6 +96,7 @@ if df is not None:
     total_rev = df[amount_col].sum() if amount_col else 0
     total_txns = len(df)
 
+    # --- Metrics ---
     c1, c2, c3 = st.columns(3)
     c1.markdown(f'<div class="metric-card"><h2>{total_txns:,}</h2><p>Total Transactions</p></div>', unsafe_allow_html=True)
     c2.markdown(f'<div class="metric-card"><h2>{indian_format(total_rev)}</h2><p>Total Revenue</p></div>', unsafe_allow_html=True)
@@ -110,7 +113,7 @@ if df is not None:
         if not api_key:
             st.warning("⚠️ Please add your GEMINI_API_KEY in Streamlit Secrets.")
         else:
-            user_query = st.text_input("Ask a business question:", placeholder="e.g., list all services")
+            user_query = st.text_input("Ask a business question:", placeholder="e.g., summarize the performance")
             if user_query:
                 try:
                     all_services = df['Service'].unique().tolist() if 'Service' in df.columns else []
@@ -118,7 +121,7 @@ if df is not None:
                     prompt = (
                         f"Act as a Senior FinTech Analyst. Answer using this context: {context}. "
                         f"Question: {user_query}. "
-                        "Rule: If asked to list services, list every single one in Unique_Services_List."
+                        "Rule: Be concise and professional."
                     )
                     with st.spinner("AI Analyst is thinking..."):
                         result = call_gemini(api_key, prompt)
@@ -133,26 +136,20 @@ if df is not None:
                 st.markdown("**Key Insights:**")
                 st.markdown(f"• **Top txn:** {txn_id} | {indian_format(top_row[amount_col])}")
 
-                # Smart success rate detection
-                status_col = None
-                for col in df.columns:
-                    if any(word in col.lower() for word in ['status', 'payment_status']):
-                        status_col = col
-                        break
+                status_col = next((col for col in df.columns if any(w in col.lower() for w in ['status', 'payment_status'])), None)
                 if status_col:
                     rate = df[status_col].astype(str).str.contains('success|complete|paid|approved', case=False, na=False).mean()
                     st.markdown(f"• **Success rate:** {rate:.1%} ({status_col})")
 
                 st.markdown(f"• **Records analyzed:** {total_txns:,}")
 
-                # Top service/category/product
                 for col in ['Service', 'Category', 'Product']:
                     if col in df.columns:
                         top_item = df[col].value_counts().index[0]
                         st.markdown(f"• **Top {col.lower()}:** {top_item}")
                         break
 else:
-    st.info("👋 Welcome! Please upload your dataset to begin.")
+    st.info("👋 Welcome! Please ensure Phonepe.csv is in your repository or upload a file to begin.")
 
 st.markdown("---")
 st.markdown(f"<p style='text-align: center; color: gray;'>{CONFIG['footer']}</p>", unsafe_allow_html=True)
