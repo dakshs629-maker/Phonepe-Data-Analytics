@@ -77,7 +77,7 @@ def load_data():
     return pd.read_csv("Phonepe.csv")
 
 st.sidebar.header("📊 Data Controls")
-st.sidebar.file_uploader("Upload Dataset", type="csv", disabled=True, help="Manual upload is disabled. System is locked to repository data.")
+st.sidebar.file_uploader("🔒 Dataset Pre-Loaded — No Upload Needed", type="csv", disabled=True, help="This dashboard runs on a fixed dataset. Upload is disabled.")
 
 df = None
 try:
@@ -181,3 +181,4 @@ else:
 
 st.markdown("---")
 st.markdown(f"<p style='text-align: center; color: gray;'>{CONFIG['footer']}</p>", unsafe_allow_html=True)
+
