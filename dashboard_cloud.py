@@ -72,12 +72,9 @@ def call_gemini(api_key, prompt):
 
 api_key = st.secrets.get("GEMINI_API_KEY", "").strip()
 
-GDRIVE_FILE_ID = "18AzvRQJQ4qERl8s8F573DDZRZxYUfBO-"
-GDRIVE_URL = f"https://drive.google.com/uc?export=download&id={GDRIVE_FILE_ID}"
-
 @st.cache_data
 def load_data():
-    return pd.read_csv(GDRIVE_URL)
+    return pd.read_csv("Phonepe.csv")
 
 st.sidebar.header("📊 Data Controls")
 st.sidebar.file_uploader("Upload Dataset", type="csv", disabled=True, help="Manual upload is disabled. System is locked to repository data.")
@@ -156,4 +153,3 @@ else:
 
 st.markdown("---")
 st.markdown(f"<p style='text-align: center; color: gray;'>{CONFIG['footer']}</p>", unsafe_allow_html=True)
-
