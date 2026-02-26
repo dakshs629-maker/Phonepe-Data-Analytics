@@ -113,21 +113,49 @@ if df is not None:
         if not api_key:
             st.warning("⚠️ Please add your GEMINI_API_KEY in Streamlit Secrets.")
         else:
-            user_query = st.text_input("Ask a business question:", placeholder="e.g., list all services")
+            user_query = st.text_input("Ask a business question:", placeholder="e.g., which service has highest failure rate?")
             if user_query:
                 try:
-                    all_services = df['Service'].unique().tolist() if 'Service' in df.columns else []
-                    context = {"Revenue": indian_format(total_rev), "Volume": total_txns, "Unique_Services_List": all_services}
+                    # --- Rich context build ---
+                    service_summary = df.groupby('Service').agg(
+                        Total_Revenue=(amount_col, 'sum'),
+                        Avg_Transaction=(amount_col, 'mean'),
+                        Volume=('Transaction_ID', 'count'),
+                        Success_Rate=('Payment_Status', lambda x: round((x == 'Successful').mean() * 100, 2)),
+                        Failure_Rate=('Payment_Status', lambda x: round((x != 'Successful').mean() * 100, 2))
+                    ).round(2).to_dict()
+
+                    failure_reasons = df[df['Payment_Status'] != 'Successful']['Reason'].value_counts().head(10).to_dict() if 'Reason' in df.columns else {}
+
+                    monthly_revenue = df.groupby(df['Date'].str[:7] if 'Date' in df.columns else df.index // 1000)[amount_col].sum().round(2).to_dict() if 'Date' in df.columns else {}
+
+                    service_type_revenue = df.groupby('Service Type')[amount_col].sum().sort_values(ascending=False).head(10).round(2).to_dict() if 'Service Type' in df.columns else {}
+
+                    context = {
+                        "Overall": {
+                            "Total_Transactions": total_txns,
+                            "Total_Revenue": indian_format(total_rev),
+                            "Avg_Ticket_Size": indian_format(df[amount_col].mean()),
+                            "Overall_Success_Rate": f"{(df['Payment_Status'] == 'Successful').mean() * 100:.2f}%"
+                        },
+                        "By_Service": service_summary,
+                        "Top_Failure_Reasons": failure_reasons,
+                        "Monthly_Revenue_Trend": monthly_revenue,
+                        "Top_Service_Types_by_Revenue": service_type_revenue
+                    }
+
                     prompt = (
-                        f"Act as a Senior FinTech Analyst. Answer using this context: {context}. "
-                        f"Question: {user_query}. "
-                        "Rule: If asked to list services, list every single one in Unique_Services_List."
+                        f"You are a Senior FinTech Analyst. Answer the question using ONLY the data provided. "
+                        f"Be specific with numbers. Do not say you lack information — all data needed is in the context.\n\n"
+                        f"DATA CONTEXT:\n{context}\n\n"
+                        f"QUESTION: {user_query}\n\n"
+                        f"ANSWER:"
                     )
                     with st.spinner("AI Analyst is thinking..."):
                         result = call_gemini(api_key, prompt)
                         st.markdown(f'<div class="ask-box"><b>AI Analyst:</b><br>{result}</div>', unsafe_allow_html=True)
                 except Exception as e:
-                    st.error(f"⚠️ Debug Error: {str(e)}")
+                    st.error(f"⚠️ Error: {str(e)}")
 
         with st.expander("📊 Quick Stats", expanded=True):
             if amount_col:
