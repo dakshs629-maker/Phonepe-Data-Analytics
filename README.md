@@ -2,7 +2,7 @@
 
 A full-stack data analytics project simulating a real-world fintech payment environment. Built on PhonePe transaction data, this project spans the complete analytics pipeline: **Business Intelligence (Power BI)**, **Statistical Analysis (Python)**, and **AI-Powered Interactive Dashboard (Streamlit + Gemini)**.
 
-### 🔗 Live Interactive Dashboard: *[Add your Streamlit app URL here]*
+### 🔗 Live Interactive Dashboard: *https://phonepe-data-analytics-dedtwcb7rffgzbveeraa8m.streamlit.app/*
 
 ---
 
