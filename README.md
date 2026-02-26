@@ -1,138 +1,116 @@
-# 💳 PhonePe Transaction & Financial Health Analytics
+# 💳 PhonePe Transaction Intelligence: End-to-End Data Portfolio
 
-> An end-to-end data analytics project covering **300,000 PhonePe transactions** — from raw data exploration to statistical hypothesis testing to an AI-powered interactive dashboard.
+A full-stack data analytics project simulating a real-world fintech payment environment. Built on PhonePe transaction data, this project spans the complete analytics pipeline: **Business Intelligence (Power BI)**, **Statistical Analysis (Python)**, and **AI-Powered Interactive Dashboard (Streamlit + Gemini)**.
 
----
-
-🌐 Live Demo: https://phonepe-data-analytics-dedtwcb7rffgzbveeraa8m.streamlit.app/
+### 🔗 Live Interactive Dashboard: *[Add your Streamlit app URL here]*
 
 ---
 
-## 📌 Project Overview
+## 📊 Project Overview
 
-This project analyses a synthetic dataset of 300,000 PhonePe transactions spanning three major service categories: **Loans**, **Insurance**, and **Recharge & Bills**. The goal is to uncover transaction patterns, quantify payment failure drivers, and surface business-ready insights through both Python analytics and an interactive Streamlit dashboard.
+The objective is to analyze payment transaction performance, identify revenue drivers, and surface actionable insights through an AI-integrated dashboard. The dashboard features a locally-run LLM (Ollama/LLaMA) for offline use and a cloud-deployed version powered by Google Gemini.
 
-The project is structured in three stages:
+### Key Features
 
-1. **Python EDA & Inferential Statistics** — Data cleaning, distribution analysis, and hypothesis testing in a Jupyter Notebook.
-2. **Power BI Dashboard** — Static BI report for stakeholder-facing visual exploration.
-3. **Streamlit Web App** — A live, AI-powered dashboard deployable locally (via Ollama) or to the cloud (via Gemini API).
-
----
-
-## 📊 Dataset
-
-**File:** `Phonepe.csv` — 300,000 records
-
-| Column | Description |
-|---|---|
-| `Transaction_ID` | Unique transaction identifier (e.g., `RCG_0C338474B366`) |
-| `Amount` | Transaction value in INR |
-| `User_ID` | Anonymised user identifier |
-| `Service` | Top-level category (`Recharge_Bills`, `Loans`, `Insurance`) |
-| `Service Type` | Sub-category (e.g., `DTH`, `Mobile Recharge`, `FASTag Recharge`, `Cable TV`) |
-| `Payment_Status` | Outcome: `Successful` or `Failed` |
-| `Reason` | Reason for outcome (e.g., `Bank Denied`, `Wrong PIN`, `Server Error`) |
-| `Date` | Transaction date (2024) |
+- **Power BI Dashboard**: Multi-view BI report covering revenue trends, service-level breakdowns, and payment success rates.
+- **Python EDA**: Deep exploratory analysis with data cleaning, distribution analysis, and statistical validation.
+- **AI-Integrated Streamlit App**: Natural language Q&A on live transaction data using Google Gemini (cloud) or LLaMA 3.2 via Ollama (local).
+- **Indian Rupee Formatting**: Custom ₹ lakh/crore formatting engine built from scratch for accurate financial display.
+- **Smart Column Detection**: Auto-detects amount and status columns, making the dashboard reusable across datasets.
 
 ---
 
-## 📈 Key Analytical Findings
+## 🛠️ Technical Stack & Core Logic
 
-**Transaction Distribution**
-The distribution of transaction amounts is heavily right-skewed — the vast majority of transactions are small-value, with a long tail of high-value loan disbursements pulling the mean upward.
+### 1. Analytics Layer: Power BI 📊
+**File:** `PowerBI_Dashboard.pbix`
+- Multi-page report with slicers for service type, payment method, and status.
+- KPIs: Total Revenue, Transaction Volume, Average Ticket Size, Success Rate.
 
-**Service Comparison — Independent Samples T-Test**
-A two-sample T-test confirmed a statistically significant difference (*p* < 0.05) between Loan and Insurance transaction sizes. Insurance transactions are capped at ₹20,000 by design, while Loan amounts regularly reach ₹1,00,000 — validating the structural difference in product risk profiles.
+### 2. Statistical Layer: Python EDA 🐍
+**File:** `Python_Analytics_Phonepe_.ipynb`
+- Data cleaning and null handling on raw transaction records.
+- Distribution analysis across service types and payment categories.
+- Revenue segmentation and outlier detection.
 
-**Failure Analysis — Chi-Square Test of Independence**
-A Chi-Square test revealed a statistically significant association between Service type and Payment Status. Failure reasons are not uniformly distributed across services: `Bank Denied` and `Wrong Info` are failure modes unique to the **Loans** service, while `Wrong PIN` and `Server Error` appear across all categories — pointing to both product-specific and infrastructure-level issues.
+### 3. Application Layer: Streamlit Dashboard 🚀
+
+**Two versions included:**
+
+| File | Description |
+| :--- | :--- |
+| `dashboard.py` | Local version — uses **Ollama (LLaMA 3.2:1b)** for on-device AI Q&A. |
+| `dashboard_cloud.py` | Cloud version — uses **Google Gemini 2.0 Flash** API for deployed app. |
+
+**Core capabilities:**
+- KPI metric cards with custom CSS (gradient dark-mode design).
+- Natural language AI analyst — ask questions like *"Which service generates the most revenue?"*
+- Smart success rate detection across varied column naming conventions.
+- `@st.cache_data` for optimized CSV loading and filter responsiveness.
 
 ---
 
-## 🛠️ Tech Stack
+## 📂 Repository Structure
 
-| Layer | Tools |
-|---|---|
-| Data Processing | Python, Pandas, NumPy |
-| Statistical Testing | SciPy (`ttest_ind`, `chi2_contingency`) |
-| Visualisation (Python) | Matplotlib, Seaborn |
-| BI Dashboard | Power BI Desktop |
-| Web App | Streamlit |
-| Cloud AI | Google Gemini API (`gemini-2.5-flash`) |
+| File | Description |
+| :--- | :--- |
+| `Phonepe.csv` | Dataset containing PhonePe transaction records. |
+| `Python_Analytics_Phonepe_.ipynb` | Jupyter Notebook for EDA and data cleaning. |
+| `dashboard.py` | Local Streamlit app with Ollama/LLaMA AI integration. |
+| `dashboard_cloud.py` | Cloud Streamlit app with Google Gemini AI integration. |
+| `PowerBI_Dashboard.pbix` | Power BI file for visual storytelling. |
+| `requirements.txt` | Environment dependencies. |
 
 ---
 
-## 📂 File Structure
+## ⚙️ Installation & Usage
 
-```
-├── Phonepe.csv                        # Primary dataset (300,000 records)
-├── Python_Analytics_Phonepe_.ipynb    # EDA, univariate/bivariate analysis, hypothesis tests
-├── PowerBI_Dashboard.pbix             # Power BI interactive report
-├── dashboard_cloud.py                 # Streamlit app — cloud deployment (Gemini AI)
-└── requirements.txt                   # Python dependencies
+**1. Clone the repository:**
+```bash
+git clone https://github.com/your-username/phonepe-transaction-intelligence.git
+cd phonepe-transaction-intelligence
 ```
 
----
-
-## 🚀 How to Run
-
-### 1. Python Analysis
-Open `Python_Analytics_Phonepe_.ipynb` in Jupyter Lab or Google Colab. Ensure `Phonepe.csv` is in the same directory before running.
-
-### 2. Power BI Dashboard
-Open `PowerBI_Dashboard.pbix` in Power BI Desktop to explore the interactive visual report.
-
-### 3. Streamlit Dashboard — Cloud (Gemini)
-
-Designed for deployment on [Streamlit Community Cloud](https://streamlit.io/cloud). Add your Gemini API key as a secret:
-
-```toml
-# .streamlit/secrets.toml
-GEMINI_API_KEY = "your-key-here"
-```
-
-Then deploy `dashboard_cloud.py` as the entry point. The app will auto-load `Phonepe.csv` if placed in the repository root, or accept a user-uploaded CSV via the sidebar.
-
----
-
-## 🤖 Dashboard Features
-
-- **KPI Cards** — Total transactions, total revenue, average ticket size (Indian lakh/crore formatting: ₹X,XX,XX,XXX)
-- **Transaction Table** — Paginated preview of the most recent records
-- **Smart AI Q&A** — Ask natural language business questions; answered by Gemini 2.5 Flash
-- **Quick Stats Panel** — Auto-detects success/failure columns, top service category, and highest-value transaction
-- **Auto Column Detection** — Intelligently identifies the amount column using keyword matching
-
----
-
-## 📦 Dependencies
-
-```
-streamlit==1.38.0
-pandas==2.2.2
-numpy==2.1.1
-requests==2.32.3
-```
-
-Install with:
-
+**2. Install dependencies:**
 ```bash
 pip install -r requirements.txt
 ```
 
+**3. Launch the local dashboard:**
+```bash
+streamlit run dashboard.py
+```
+
+**4. For the cloud version**, add your Gemini API key to Streamlit Secrets:
+```toml
+# .streamlit/secrets.toml
+GEMINI_API_KEY = "your-key-here"
+```
+Then run:
+```bash
+streamlit run dashboard_cloud.py
+```
+
+> **Note:** The local version requires [Ollama](https://ollama.com/) to be installed and running with the `llama3.2:1b` model pulled (`ollama pull llama3.2:1b`).
+
 ---
 
-## 🔭 Future Scope
+## 📈 Key Insights
 
-- **Failure Prediction** — Train a Random Forest or XGBoost classifier to predict transaction failure probability based on service type, amount tier, and user history.
-- **Time-Series Forecasting** — Apply SARIMA or Prophet on the `Date` column to forecast peak transaction windows and support infrastructure capacity planning.
-- **Anomaly Detection** — Flag unusually large transactions or sudden spikes in failure rates as potential fraud signals.
-- **Cohort Analysis** — Track User_ID behaviour across dates to identify retention patterns and repeat transaction tendencies.
+- **Revenue Concentration**: A small subset of high-value services accounts for a disproportionate share of total revenue.
+- **Payment Success Patterns**: Success rates vary significantly across service types, highlighting operational gaps.
+- **Ticket Size Distribution**: Average transaction values differ considerably between B2B and B2C service categories.
+- **AI Utility**: Natural language querying surfaces insights faster than manual filter-based exploration.
 
 ---
 
-## 👤 Author
+## 🛠️ Roadmap & Future Enhancements (WIP) 🚧
 
-**Data Portfolio**
-Built as a demonstration of end-to-end data analytics — from hypothesis-driven Python analysis to production-ready dashboard deployment.
+- **Predictive Modeling**: Churn prediction and fraud detection using XGBoost/Random Forest.
+- **Live Database Connection**: Transition from static CSV to a live SQL or Firebase connection.
+- **RAG Pipeline**: Retrieval-Augmented Generation for context-aware financial Q&A over large datasets.
+- **Multi-Dataset Support**: Extend the dashboard to support other fintech datasets (Paytm, Razorpay).
+
+---
+
+**Developed by Daksh Sharma** | *Data Analytics & Business Intelligence Portfolio*
