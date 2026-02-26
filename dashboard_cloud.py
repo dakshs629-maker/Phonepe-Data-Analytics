@@ -55,29 +55,20 @@ def indian_format(num):
         return f"{'-' if neg else ''}₹{result}"
     except: return str(num)
 
-# Fixed: Using gemini-2.0-flash to resolve 400 errors
+# Using gemini-2.5-flash — best free tier availability on AI Studio
 def call_gemini(api_key, prompt):
-    model_id = "gemini-2.0-flash" 
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_id}:generateContent?key={api_key}"
-    
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}"
     payload = {"contents": [{"parts": [{"text": prompt}]}]}
-    
     try:
         r = requests.post(url, json=payload, timeout=30)
-        
-        # Handle 429 Rate Limit error
         if r.status_code == 429:
-            return "⚠️ AI Limit Reached: Please wait 60 seconds and try again."
-        
-        # Handle 400 Bad Request error
+            return "⚠️ Rate limit reached — please wait a moment and try again."
         if r.status_code == 400:
-            return f"⚠️ API Error 400: Bad Request. Ensure model ID is correct."
-
+            return "⚠️ Invalid request — check your API key in Streamlit Secrets."
         r.raise_for_status()
         return r.json()["candidates"][0]["content"]["parts"][0]["text"]
-    
     except Exception as e:
-        return f"⚠️ Connection Error: {str(e)}"
+        return f"⚠️ Error: {str(e)}"
 
 api_key = st.secrets.get("GEMINI_API_KEY", "").strip()
 
@@ -165,3 +156,4 @@ else:
 
 st.markdown("---")
 st.markdown(f"<p style='text-align: center; color: gray;'>{CONFIG['footer']}</p>", unsafe_allow_html=True)
+
