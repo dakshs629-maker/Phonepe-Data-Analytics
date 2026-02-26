@@ -14,7 +14,7 @@ st.set_page_config(
 CONFIG = {
     "title": "PhonePe Transaction Intelligence",
     "amount_keyword": "amount",
-    "footer": "MBA Data Portfolio",
+    "footer": "Daksh Sharma · Data Analytics Portfolio",
 }
 
 st.markdown("""
@@ -81,22 +81,22 @@ def call_gemini(api_key, prompt):
 
 api_key = st.secrets.get("GEMINI_API_KEY", "").strip()
 
+GDRIVE_FILE_ID = "18AzvRQJQ4qERl8s8F573DDZRZxYUfBO-"
+GDRIVE_URL = f"https://drive.google.com/uc?export=download&id={GDRIVE_FILE_ID}"
+
 @st.cache_data
-def load_data(file_path):
-    return pd.read_csv(file_path)
+def load_data():
+    return pd.read_csv(GDRIVE_URL)
 
 st.sidebar.header("📊 Data Controls")
-
-# Label updated to "Upload Dataset" and disabled
 st.sidebar.file_uploader("Upload Dataset", type="csv", disabled=True, help="Manual upload is disabled. System is locked to repository data.")
 
 df = None
-# Forcing the use of Phonepe.csv with the requested label
-if os.path.exists("Phonepe.csv"):
-    df = load_data("Phonepe.csv")
-    st.sidebar.info("📂 Using Repository File: PhonePe.csv")
-else:
-    st.sidebar.error("❌ Error: 'Phonepe.csv' not found in repository.")
+try:
+    df = load_data()
+    st.sidebar.info("📂 Dataset Loaded")
+except Exception as e:
+    st.sidebar.error(f"❌ Could not load dataset: {e}")
 
 st.title(f"💳 {CONFIG['title']}")
 
@@ -165,8 +165,3 @@ else:
 
 st.markdown("---")
 st.markdown(f"<p style='text-align: center; color: gray;'>{CONFIG['footer']}</p>", unsafe_allow_html=True)
-
-
-
-
-
