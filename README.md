@@ -1,4 +1,4 @@
-# 💳 PhonePe Transaction Intelligence — End-to-End Data Portfolio
+# PhonePe Transaction Intelligence — End-to-End Data Portfolio
 
 India's UPI ecosystem processed over ₹200 trillion in FY24, with PhonePe commanding ~48% market share. But volume dominance masks a structural tension: zero-MDR on UPI limits direct revenue per transaction, making service-mix and ticket-size optimisation critical for sustainable growth. This project analyses transaction patterns across service types, identifies revenue concentration risk, and deploys an AI-integrated dashboard that allows non-technical stakeholders to query data in natural language — reducing analyst dependency for routine business questions.
 
@@ -6,7 +6,7 @@ India's UPI ecosystem processed over ₹200 trillion in FY24, with PhonePe comma
 
 ---
 
-## 📊 Project Overview
+## Project Overview
 
 A full-stack analytics project spanning **Business Intelligence (Power BI)** → **Statistical Analysis (Python)** → **AI-Powered Interactive Dashboard (Streamlit + Gemini)** — built on PhonePe transaction data covering multiple service types and payment categories.
 
@@ -19,7 +19,7 @@ A full-stack analytics project spanning **Business Intelligence (Power BI)** →
 
 ---
 
-## 📈 Key Insights
+## Key Insights
 
 **1. Revenue Concentration (Pareto Effect)**
 Loans alone account for ~73% of total transaction value ($2.53bn out of $3.47bn) despite being one of four service categories. Money Transfer, Insurance, and Recharge & Bills collectively account for the remaining 27%. This concentration creates platform dependency risk — a regulatory change or competitive pressure on the lending vertical could materially impact total platform revenue. Diversification into higher-frequency categories like Recharge & Bills is the strategic long-term hedge.
@@ -35,7 +35,7 @@ The Gemini-integrated Q&A layer reduces time-to-insight for business questions f
 
 ---
 
-## 🛠️ Technical Stack
+## Technical Stack
 
 | Layer | Tool | Purpose |
 | :--- | :--- | :--- |
@@ -47,13 +47,13 @@ The Gemini-integrated Q&A layer reduces time-to-insight for business questions f
 
 ---
 
-## 🤖 AI Integration — Technical Note
+## AI Integration — Technical Note
 
 > The Gemini Q&A layer operates on summarised data context (aggregated KPIs and column samples) rather than full record-level querying. This is a deliberate architectural choice for cloud deployment efficiency, keeping API payload sizes within rate limits. A planned enhancement will implement a RAG (Retrieval-Augmented Generation) pipeline for granular record-level natural language querying.
 
 ---
 
-## 📂 Repository Structure
+## Repository Structure
 
 | File | Description |
 | :--- | :--- |
@@ -66,7 +66,7 @@ The Gemini-integrated Q&A layer reduces time-to-insight for business questions f
 
 ---
 
-## ⚙️ Installation & Usage
+## Installation & Usage
 
 **1. Clone the repository:**
 ```bash
@@ -96,15 +96,6 @@ Then:
 ```bash
 streamlit run dashboard_cloud.py
 ```
-
----
-
-## 🛠️ Roadmap
-
-- **Near-term:** Add KMeans clustering (k=3) to Python notebook for customer segmentation — `Low-Value Frequent`, `Mid-Value Regular`, `High-Value Occasional` — to enrich the analytical narrative.
-- **Near-term:** Expand Gemini context to include full dataframe summary and top/bottom record samples for richer Q&A responses.
-- **Post-certification:** Fraud detection model using Isolation Forest on transaction outliers — directly applicable to PhonePe's risk and trust use case.
-- **Long-term:** RAG pipeline (LangChain + Chroma) over transaction data for true record-level natural language querying; live database connection replacing static CSV.
 
 ---
 
